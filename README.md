@@ -41,7 +41,6 @@ python main.py --folder_name "MyBackups" --subfolder_name "Images" --mime_type "
 * `--parent_id`: ID папки, в которой нужно создать новую папку.
 * `--folder_name`: Имя корневой папки (по умолчанию: Projects).
 * `--subfolder_name`: Имя вложенной папки (по умолчанию: Python).
-* `--files_count`: Количество файлов (справочно).
 * `--mime_type`: Тип загружаемого файла (по умолчанию: image/png).
 
 ## Цель проекта
