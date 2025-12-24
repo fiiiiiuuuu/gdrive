@@ -5,38 +5,57 @@ from upload_file import upload_file
 from get_sharing_link import get_sharing_link
 from download_files import download_file
 
-def get_args():
+
+def get_arguments():
     parser = argparse.ArgumentParser(description='Google Drive Manager')
-    parser.add_argument('--parent_id', type=str, default=None, help='ID родительской папки')
-    parser.add_argument('--folder_name', type=str, default='Projects', help='Имя главной папки')
-    parser.add_argument('--subfolder_name', type=str, default='Python', help='Имя подпапки')
-    parser.add_argument('--mime_type', type=str, default='image/png', help='MimeType для основного файла')
+    parser.add_argument(
+        '--parent_id',
+        type=str,
+        default=None
+    )
+    parser.add_argument(
+        '--folder_name',
+        type=str,
+        default='Projects'
+    )
+    parser.add_argument(
+        '--subfolder_name',
+        type=str,
+        default='Python'
+    )
     return parser.parse_args()
 
-def main():
-    args = get_args()
-    
-    CLIENT_SECRET = 'credentials.json'
-    API_NAME = 'drive'
-    API_VERSION = 'v3'
-    SCOPES = ['https://www.googleapis.com/auth/drive']
 
-    service = Create_Service(CLIENT_SECRET, API_NAME, API_VERSION, SCOPES)
+def process_file_workflow(service, file_name, mime_type, target_folder_id):
+    current_mime_type = mime_type
+    if file_name.endswith('.py'):
+        current_mime_type = 'text/x-python'
+    elif file_name.endswith('.png'):
+        current_mime_type = 'image/png'
+    elif file_name.endswith('.jpg') or file_name.endswith('.jpeg'):
+        current_mime_type = 'image/jpeg'
+
+    uploaded_file_id = upload_file(service, file_name, current_mime_type, target_folder_id)
+    web_view_link = get_sharing_link(service, uploaded_file_id)
+    print(f'Файл {file_name}: {web_view_link}')
+    download_file(service, uploaded_file_id, file_name)
+
+
+def main():
+    args = get_arguments()
+
+    client_secret_file = 'credentials.json'
+    api_name = 'drive'
+    api_version = 'v3'
+    scopes = ['https://www.googleapis.com/auth/drive']
+
+    service = Create_Service(client_secret_file, api_name, api_version, scopes)
 
     projects_folder_id = create_folder(service, args.folder_name, args.parent_id)
-    new_project_folder_id = create_folder(service, args.subfolder_name, projects_folder_id)
+    target_folder_id = create_folder(service, args.subfolder_name, projects_folder_id)
 
-    utka_id = upload_file(service, 'utka.png', args.mime_type, new_project_folder_id)
-    utka_link = get_sharing_link(service, utka_id)
-    print(f'Файл utka.png: {utka_link}')
-    download_file(service, utka_id, 'utka.png')
+    process_file_workflow(service, 'main.py', 'text/x-python', target_folder_id)
 
-    script_id = upload_file(service, 'main.py', 'text/x-python', new_project_folder_id)
-    script_link = get_sharing_link(service, script_id)
-    print(f'Файл main.py: {script_link}')
-    download_file(service, script_id, 'main.py')
-    
-    print(f"Обработано файлов: {args.files_count}")
 
 if __name__ == '__main__':
     main()
